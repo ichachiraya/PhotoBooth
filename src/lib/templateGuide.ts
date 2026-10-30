@@ -2,17 +2,22 @@ import type { Lang } from '../i18n/useI18n';
 import { downloadBlob } from './download';
 import { defaultSlotLayout, BASE_HEIGHT, BASE_WIDTH } from './layout';
 
-const { slots, caption } = defaultSlotLayout();
+const { slots } = defaultSlotLayout();
 
 const LABELS = {
   photo: {
     en: (n: number) => `Photo ${n} — will be covered`,
     th: (n: number) => `รูปที่ ${n} — จะถูกบังด้วยรูป`,
   },
-  caption: { en: 'Caption area (optional)', th: 'พื้นที่คำบรรยาย (ไม่บังคับ)' },
 };
 
-/** Draws the 600x1800 guide: the 3 slot windows + caption area, outlined and labeled. */
+/**
+ * Draws the 600x1800 guide: just the 3 photo windows, outlined and
+ * labeled — no caption area marked. The Edit step's optional caption
+ * text/date stamp still works normally on a custom template (same as
+ * any built-in one); it just isn't part of what someone designs around
+ * here, to keep the guide simple.
+ */
 export function renderTemplateGuide(lang: Lang): HTMLCanvasElement {
   const canvas = document.createElement('canvas');
   canvas.width = BASE_WIDTH;
@@ -43,10 +48,6 @@ export function renderTemplateGuide(lang: Lang): HTMLCanvasElement {
     ctx.fillText(lines[0] ?? label, rect.x + rect.width / 2, rect.y + rect.height / 2 - 12);
     if (lines[1]) ctx.fillText(lines[1], rect.x + rect.width / 2, rect.y + rect.height / 2 + 12);
   });
-
-  ctx.strokeRect(caption.x, caption.y, caption.width, caption.height);
-  ctx.fillStyle = '#3B3631';
-  ctx.fillText(LABELS.caption[lang], caption.x + caption.width / 2, caption.y + caption.height / 2);
 
   ctx.setLineDash([]);
   ctx.lineWidth = 1;

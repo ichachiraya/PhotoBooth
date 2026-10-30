@@ -38,3 +38,19 @@ export function installFakeCanvasContext(): void {
     });
   } as unknown as typeof HTMLCanvasElement.prototype.getContext;
 }
+
+/**
+ * jsdom also doesn't implement `createImageBitmap`. Nothing in jsdom can
+ * actually decode image bytes anyway, so this just returns a plausible
+ * fake bitmap for any input — enough for code paths that only care about
+ * getting *an* ImageBitmap-shaped object back (e.g. building a custom
+ * template from a Blob) to run without throwing.
+ */
+export function installFakeCreateImageBitmap(): void {
+  globalThis.createImageBitmap = (async () =>
+    ({
+      width: 600,
+      height: 1800,
+      close: () => undefined,
+    }) satisfies Partial<ImageBitmap>) as unknown as typeof createImageBitmap;
+}

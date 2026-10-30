@@ -1,4 +1,6 @@
 import '@testing-library/jest-dom/vitest';
-import { installFakeCanvasContext } from './mockCanvasContext';
+import 'fake-indexeddb/auto';
+import { installFakeCanvasContext, installFakeCreateImageBitmap } from './mockCanvasContext';
 
 installFakeCanvasContext();
+installFakeCreateImageBitmap();

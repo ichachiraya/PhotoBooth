@@ -10,7 +10,7 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.svg'],
+      includeAssets: ['favicon.svg', 'pwa-192.png', 'pwa-512.png', 'pwa-maskable.png'],
       manifest: {
         name: 'Photo Booth',
         short_name: 'Photo Booth',
@@ -19,7 +19,6 @@ export default defineConfig({
         background_color: '#FAF6EF',
         display: 'standalone',
         start_url: '/',
-        // Icon files are added in the PWA/polish milestone; manifest wiring lives here early.
         icons: [
           { src: 'pwa-192.png', sizes: '192x192', type: 'image/png' },
           { src: 'pwa-512.png', sizes: '512x512', type: 'image/png' },

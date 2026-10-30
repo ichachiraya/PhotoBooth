@@ -16,7 +16,7 @@ interface CameraViewProps {
  */
 export function CameraView({ videoRef, mirrored, countdown, flashKey }: CameraViewProps) {
   return (
-    <div className="overflow-hidden rounded-[var(--radius-md)] border border-line bg-black/90 p-1.5">
+    <div className="overflow-hidden rounded-[var(--radius-md)] border border-line bg-bg p-2 shadow-[0_1px_3px_rgba(59,54,49,0.08)]">
       <div className="relative aspect-[4/3] overflow-hidden rounded-[var(--radius-sm)] bg-black">
         <video
           ref={videoRef}

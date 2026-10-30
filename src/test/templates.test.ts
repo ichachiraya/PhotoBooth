@@ -59,20 +59,50 @@ describe('template config validation', () => {
   }
 
   describe('a template built from a user-imported custom template', () => {
-    it('is just as valid as a built-in one', async () => {
+    it('in "background" mode, is a pattern background and just as valid as a built-in one', async () => {
       const template = await buildCustomTemplate({
         id: 'test-id',
         name: 'My Custom Template',
+        mode: 'background',
         createdAt: Date.now(),
         imageBlob: new Blob(['fake-png-bytes'], { type: 'image/png' }),
       });
 
       expect(template.id).toBe('custom-test-id');
-      // The uploaded image is the background (photos always draw on top of
-      // it in their slots), not an overlay — see customTemplateFactory.ts.
+      // Photos always draw on top of the uploaded image in their slots.
       expect(template.background.kind).toBe('pattern');
       expect(template.background.draw).toBeTypeOf('function');
+      expect(template.overlayDraw).toBeUndefined();
       expectValidTemplate(template);
+    });
+
+    it('in "overlay" mode, draws on top of the photos and is still valid', async () => {
+      const template = await buildCustomTemplate({
+        id: 'test-id-2',
+        name: 'My Overlay Template',
+        mode: 'overlay',
+        createdAt: Date.now(),
+        imageBlob: new Blob(['fake-png-bytes'], { type: 'image/png' }),
+      });
+
+      expect(template.id).toBe('custom-test-id-2');
+      expect(template.background.kind).toBe('solid'); // plain cream behind the photo
+      expect(template.overlayDraw).toBeTypeOf('function');
+      expectValidTemplate(template);
+    });
+
+    it('falls back to "background" mode for a record saved before `mode` existed', async () => {
+      const legacyRecord = {
+        id: 'legacy-id',
+        name: 'Old Template',
+        createdAt: Date.now(),
+        imageBlob: new Blob(['fake-png-bytes'], { type: 'image/png' }),
+        // `mode` intentionally omitted, as with any record saved before it existed.
+      } as unknown as Parameters<typeof buildCustomTemplate>[0];
+
+      const template = await buildCustomTemplate(legacyRecord);
+      expect(template.background.kind).toBe('pattern');
+      expect(template.overlayDraw).toBeUndefined();
     });
   });
 });

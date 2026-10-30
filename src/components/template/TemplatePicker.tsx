@@ -5,7 +5,7 @@ import { templates } from '../../templates';
 import { TemplateThumbnail } from './TemplateThumbnail';
 import { AddCustomTemplateCard } from './AddCustomTemplateCard';
 import { ImportTemplateDialog } from './ImportTemplateDialog';
-import { useCustomTemplates } from '../../hooks/useCustomTemplates';
+import { useCustomTemplates, type AddCustomTemplateInput } from '../../hooks/useCustomTemplates';
 import { useI18n } from '../../i18n/useI18n';
 import type { Lang } from '../../i18n/useI18n';
 
@@ -77,8 +77,8 @@ export function TemplatePicker({ photos, selectedId, onSelect }: TemplatePickerP
   const { entries, addCustomTemplate, removeCustomTemplate } = useCustomTemplates();
   const [isImporting, setIsImporting] = useState(false);
 
-  async function handleImport(file: File, name: string) {
-    await addCustomTemplate(file, name);
+  async function handleImport(input: AddCustomTemplateInput) {
+    await addCustomTemplate(input);
     setIsImporting(false);
   }
 
@@ -122,7 +122,11 @@ export function TemplatePicker({ photos, selectedId, onSelect }: TemplatePickerP
       </div>
 
       {isImporting && (
-        <ImportTemplateDialog onCancel={() => setIsImporting(false)} onImport={handleImport} />
+        <ImportTemplateDialog
+          photos={photos}
+          onCancel={() => setIsImporting(false)}
+          onImport={handleImport}
+        />
       )}
     </>
   );

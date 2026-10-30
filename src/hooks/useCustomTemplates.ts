@@ -6,17 +6,24 @@ import {
   saveCustomTemplate,
 } from '../lib/customTemplateStore';
 import { buildCustomTemplate } from '../lib/customTemplateFactory';
-import { normalizeCustomTemplateImage } from '../lib/customTemplateImage';
+import type { TemplateOverlayMode } from '../lib/templateOverlayDetection';
 
 export interface CustomTemplateEntry {
   template: Template;
   storedId: string;
 }
 
+export interface AddCustomTemplateInput {
+  name: string;
+  mode: TemplateOverlayMode;
+  /** Already normalized + encoded — see lib/customTemplateImage.ts. */
+  imageBlob: Blob;
+}
+
 export interface UseCustomTemplatesResult {
   entries: CustomTemplateEntry[];
   isLoading: boolean;
-  addCustomTemplate: (file: File, name: string) => Promise<void>;
+  addCustomTemplate: (input: AddCustomTemplateInput) => Promise<void>;
   removeCustomTemplate: (storedId: string) => Promise<void>;
 }
 
@@ -45,9 +52,8 @@ export function useCustomTemplates(): UseCustomTemplatesResult {
     };
   }, []);
 
-  async function addCustomTemplate(file: File, name: string): Promise<void> {
-    const imageBlob = await normalizeCustomTemplateImage(file);
-    const stored = await saveCustomTemplate({ name, imageBlob });
+  async function addCustomTemplate(input: AddCustomTemplateInput): Promise<void> {
+    const stored = await saveCustomTemplate(input);
     const template = await buildCustomTemplate(stored);
     setEntries((prev) => [...prev, { template, storedId: stored.id }]);
   }

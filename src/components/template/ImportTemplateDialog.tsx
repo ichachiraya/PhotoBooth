@@ -1,33 +1,48 @@
 import { useEffect, useRef, useState } from 'react';
 import { Download } from 'lucide-react';
+import type { SlotPhotos } from '../../types';
 import { Button } from '../ui/Button';
+import { Toggle } from '../ui/Toggle';
+import { TemplateThumbnail } from './TemplateThumbnail';
 import { useI18n } from '../../i18n/useI18n';
 import { downloadTemplateGuide } from '../../lib/templateGuide';
-import { MAX_TEMPLATE_FILE_BYTES } from '../../lib/customTemplateImage';
+import {
+  canvasToPngBlob,
+  MAX_TEMPLATE_FILE_BYTES,
+  normalizeCustomTemplateImage,
+} from '../../lib/customTemplateImage';
+import {
+  detectTemplateOverlayMode,
+  type TemplateOverlayMode,
+} from '../../lib/templateOverlayDetection';
+import { buildTemplateFromBitmap } from '../../lib/customTemplateFactory';
+import type { AddCustomTemplateInput } from '../../hooks/useCustomTemplates';
 
 interface ImportTemplateDialogProps {
+  photos: SlotPhotos;
   onCancel: () => void;
-  onImport: (file: File, name: string) => Promise<void>;
+  onImport: (input: AddCustomTemplateInput) => Promise<void>;
 }
 
-/** Checkerboard backdrop behind the preview so transparent areas actually read as transparent. */
-const CHECKERBOARD_STYLE = {
-  backgroundImage:
-    'conic-gradient(var(--color-line) 90deg, transparent 90deg 180deg, var(--color-line) 180deg 270deg, transparent 270deg)',
-  backgroundSize: '16px 16px',
-};
+interface ProcessedUpload {
+  bitmap: ImageBitmap;
+  blob: Blob;
+}
 
 /**
  * Popup for importing a user-designed template: download the layout
- * guide, name it, upload the PNG they designed around it. Saving runs
- * the file through normalizeCustomTemplateImage + IndexedDB via the
- * addCustomTemplate callback the picker provides.
+ * guide, name it, upload the PNG they designed around it. The upload is
+ * decoded and transparency-checked immediately (detectTemplateOverlayMode)
+ * so a live preview — rendered with the person's actual photos, via the
+ * same TemplateThumbnail every other preview uses — shows up right away,
+ * with a one-line note + toggle in case the detected mode is wrong.
  */
-export function ImportTemplateDialog({ onCancel, onImport }: ImportTemplateDialogProps) {
+export function ImportTemplateDialog({ photos, onCancel, onImport }: ImportTemplateDialogProps) {
   const { t, lang } = useI18n();
   const [name, setName] = useState('');
-  const [file, setFile] = useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [processed, setProcessed] = useState<ProcessedUpload | null>(null);
+  const [mode, setMode] = useState<TemplateOverlayMode>('background');
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -40,31 +55,38 @@ export function ImportTemplateDialog({ onCancel, onImport }: ImportTemplateDialo
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [onCancel]);
 
+  // The preview bitmap is transient (dialog-local) — release it whenever
+  // it's replaced by a new upload, and on unmount.
   useEffect(() => {
-    return () => {
-      if (previewUrl) URL.revokeObjectURL(previewUrl);
-    };
-  }, [previewUrl]);
+    return () => processed?.bitmap.close();
+  }, [processed]);
 
-  function handleFileChange(selected: File | undefined) {
+  async function handleFileChange(selected: File | undefined) {
     setError(null);
-    if (!selected) {
-      setFile(null);
-      setPreviewUrl(null);
-      return;
-    }
+    setProcessed(null);
+    if (!selected) return;
+
     if (selected.size > MAX_TEMPLATE_FILE_BYTES) {
       setError(t.customTemplate.errorTooLarge);
       if (fileInputRef.current) fileInputRef.current.value = '';
-      setFile(null);
-      setPreviewUrl(null);
       return;
     }
-    setFile(selected);
-    setPreviewUrl((prev) => {
-      if (prev) URL.revokeObjectURL(prev);
-      return URL.createObjectURL(selected);
-    });
+
+    setIsProcessing(true);
+    try {
+      const canvas = await normalizeCustomTemplateImage(selected);
+      const detectedMode = detectTemplateOverlayMode(canvas);
+      const [bitmap, blob] = await Promise.all([
+        createImageBitmap(canvas),
+        canvasToPngBlob(canvas),
+      ]);
+      setMode(detectedMode);
+      setProcessed({ bitmap, blob });
+    } catch {
+      setError(t.customTemplate.errorGeneric);
+    } finally {
+      setIsProcessing(false);
+    }
   }
 
   async function handleDownloadGuide() {
@@ -76,18 +98,26 @@ export function ImportTemplateDialog({ onCancel, onImport }: ImportTemplateDialo
   }
 
   async function handleSave() {
-    if (!file || !name.trim()) return;
+    if (!processed || !name.trim()) return;
     setIsSaving(true);
     setError(null);
     try {
-      await onImport(file, name.trim());
+      await onImport({ name: name.trim(), mode, imageBlob: processed.blob });
     } catch {
       setError(t.customTemplate.errorGeneric);
       setIsSaving(false);
     }
   }
 
-  const canSave = !!file && name.trim().length > 0 && !isSaving;
+  const canSave = !!processed && name.trim().length > 0 && !isSaving;
+  const previewTemplate = processed
+    ? buildTemplateFromBitmap(
+        processed.bitmap,
+        mode,
+        'preview',
+        name.trim() || t.customTemplate.previewLabel,
+      )
+    : null;
 
   return (
     <div
@@ -124,18 +154,41 @@ export function ImportTemplateDialog({ onCancel, onImport }: ImportTemplateDialo
               ref={fileInputRef}
               type="file"
               accept="image/png,image/*"
-              onChange={(e) => handleFileChange(e.target.files?.[0])}
+              onChange={(e) => void handleFileChange(e.target.files?.[0])}
               className="text-sm text-text file:mr-3 file:rounded-[var(--radius-sm)] file:border file:border-line file:bg-surface file:px-3 file:py-1.5 file:text-sm file:text-text"
             />
           </label>
 
-          {previewUrl && (
-            <div
-              className="mx-auto overflow-hidden rounded-[var(--radius-sm)] border border-line"
-              style={CHECKERBOARD_STYLE}
-            >
-              <img src={previewUrl} alt="" className="block h-40 w-auto" />
-            </div>
+          {isProcessing && (
+            <p className="text-sm text-text-secondary">{t.customTemplate.detecting}</p>
+          )}
+
+          {processed && !isProcessing && (
+            <>
+              <div className="flex items-center justify-between gap-3 rounded-[var(--radius-sm)] border border-line bg-surface px-3 py-2">
+                <span className="text-sm text-text">
+                  {mode === 'overlay'
+                    ? t.customTemplate.modeOverlay
+                    : t.customTemplate.modeBackground}
+                </span>
+                <Toggle
+                  checked={mode === 'overlay'}
+                  onChange={(checked) => setMode(checked ? 'overlay' : 'background')}
+                  label={t.customTemplate.modeToggleLabel}
+                />
+              </div>
+
+              {previewTemplate && (
+                <div className="flex flex-col items-center gap-1.5">
+                  <span className="u-label text-text-secondary">
+                    {t.customTemplate.previewLabel}
+                  </span>
+                  <div className="overflow-hidden rounded-[var(--radius-sm)] border border-line bg-bg p-1.5">
+                    <TemplateThumbnail template={previewTemplate} photos={photos} width={140} />
+                  </div>
+                </div>
+              )}
+            </>
           )}
 
           {error && (
@@ -149,7 +202,7 @@ export function ImportTemplateDialog({ onCancel, onImport }: ImportTemplateDialo
           <Button variant="secondary" onClick={onCancel} disabled={isSaving}>
             {t.common.cancel}
           </Button>
-          <Button variant="primary" onClick={handleSave} disabled={!canSave}>
+          <Button variant="primary" onClick={() => void handleSave()} disabled={!canSave}>
             {isSaving ? t.customTemplate.saving : t.customTemplate.save}
           </Button>
         </div>

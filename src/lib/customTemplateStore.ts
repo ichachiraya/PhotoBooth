@@ -7,10 +7,14 @@
  * breaking the rest of the app.
  */
 
+import type { TemplateOverlayMode } from './templateOverlayDetection';
+
 export interface StoredCustomTemplate {
   id: string;
   name: string;
   createdAt: number;
+  /** Whether the design draws on top of the photo or behind it — see templateOverlayDetection.ts. */
+  mode: TemplateOverlayMode;
   /** Already normalized to a fixed 600x1800 PNG — see lib/customTemplateImage.ts. */
   imageBlob: Blob;
 }
@@ -66,12 +70,14 @@ export async function listCustomTemplates(): Promise<StoredCustomTemplate[]> {
 
 export async function saveCustomTemplate(input: {
   name: string;
+  mode: TemplateOverlayMode;
   imageBlob: Blob;
 }): Promise<StoredCustomTemplate> {
   const record: StoredCustomTemplate = {
     id: crypto.randomUUID(),
     name: input.name,
     createdAt: Date.now(),
+    mode: input.mode,
     imageBlob: input.imageBlob,
   };
   await withStore('readwrite', (store) => store.add(record));

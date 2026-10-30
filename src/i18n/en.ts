@@ -29,6 +29,11 @@ export interface Dictionary {
     nameLabel: string;
     namePlaceholder: string;
     fileLabel: string;
+    detecting: string;
+    modeOverlay: string;
+    modeBackground: string;
+    modeToggleLabel: string;
+    previewLabel: string;
     save: string;
     saving: string;
     errorTooLarge: string;
@@ -66,10 +71,15 @@ export const en: Dictionary = {
     dialogTitle: 'Import a custom template',
     downloadGuide: 'Download the template guide',
     instructions:
-      "Download the guide, then design freely around the marked windows in any image editor — don't worry about what's inside them, your photos will fully cover that area regardless. Export a PNG at the same 600 × 1800 size and upload it below.",
+      'Download the guide, then design freely around the marked windows in any image editor. Leave a window transparent if you want your design to overlap the photo there, like a frame edge or a sticker — or fill it in if you just want the photo to cover it completely. Export a PNG at the same 600 × 1800 size and upload it below; we’ll detect which one you meant automatically.',
     nameLabel: 'Name',
     namePlaceholder: 'My template',
     fileLabel: 'Your design (PNG)',
+    detecting: 'Checking your design…',
+    modeOverlay: 'Frame overlaps photo',
+    modeBackground: 'Frame behind photo',
+    modeToggleLabel: 'Draw frame over the photo',
+    previewLabel: 'Preview',
     save: 'Import',
     saving: 'Importing…',
     errorTooLarge: 'That file is too large (max 20MB).',

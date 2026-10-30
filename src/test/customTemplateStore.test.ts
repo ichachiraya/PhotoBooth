@@ -24,15 +24,21 @@ describe('customTemplateStore', () => {
   });
 
   it('saves a template and can list it back', async () => {
-    const saved = await saveCustomTemplate({ name: 'My Template', imageBlob: fakeBlob() });
+    const saved = await saveCustomTemplate({
+      name: 'My Template',
+      mode: 'overlay',
+      imageBlob: fakeBlob(),
+    });
     expect(saved.id).toBeTruthy();
     expect(saved.name).toBe('My Template');
+    expect(saved.mode).toBe('overlay');
     expect(saved.createdAt).toBeGreaterThan(0);
 
     const all = await listCustomTemplates();
     expect(all).toHaveLength(1);
     expect(all[0]?.id).toBe(saved.id);
     expect(all[0]?.name).toBe('My Template');
+    expect(all[0]?.mode).toBe('overlay');
     // Not asserting on imageBlob's own shape here: fake-indexeddb's
     // structured-clone of a jsdom Blob doesn't round-trip faithfully in
     // this test environment, unlike a real browser's IndexedDB. The
@@ -41,19 +47,31 @@ describe('customTemplateStore', () => {
   });
 
   it('lists multiple templates oldest first', async () => {
-    const first = await saveCustomTemplate({ name: 'First', imageBlob: fakeBlob() });
+    const first = await saveCustomTemplate({
+      name: 'First',
+      mode: 'background',
+      imageBlob: fakeBlob(),
+    });
     // createdAt has millisecond resolution; a real person can't click fast
     // enough to tie, but two saves back-to-back in a test can — force a
     // distinct timestamp so the ordering assertion below is meaningful.
     await new Promise((resolve) => setTimeout(resolve, 2));
-    const second = await saveCustomTemplate({ name: 'Second', imageBlob: fakeBlob() });
+    const second = await saveCustomTemplate({
+      name: 'Second',
+      mode: 'background',
+      imageBlob: fakeBlob(),
+    });
 
     const all = await listCustomTemplates();
     expect(all.map((t) => t.id)).toEqual([first.id, second.id]);
   });
 
   it('deletes a template', async () => {
-    const saved = await saveCustomTemplate({ name: 'Temp', imageBlob: fakeBlob() });
+    const saved = await saveCustomTemplate({
+      name: 'Temp',
+      mode: 'background',
+      imageBlob: fakeBlob(),
+    });
     await deleteCustomTemplate(saved.id);
     expect(await listCustomTemplates()).toEqual([]);
   });

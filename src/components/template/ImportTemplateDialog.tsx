@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from 'react';
 import { Download } from 'lucide-react';
 import type { SlotPhotos } from '../../types';
 import { Button } from '../ui/Button';
-import { Toggle } from '../ui/Toggle';
 import { TemplateThumbnail } from './TemplateThumbnail';
 import { useI18n } from '../../i18n/useI18n';
 import { downloadTemplateGuide } from '../../lib/templateGuide';
@@ -35,7 +34,8 @@ interface ProcessedUpload {
  * decoded and transparency-checked immediately (detectTemplateOverlayMode)
  * so a live preview — rendered with the person's actual photos, via the
  * same TemplateThumbnail every other preview uses — shows up right away,
- * with a one-line note + toggle in case the detected mode is wrong.
+ * alongside two clearly-labeled option cards (not a toggle, which forces
+ * people to infer what "on" means) in case the detected guess is wrong.
  */
 export function ImportTemplateDialog({ photos, onCancel, onImport }: ImportTemplateDialogProps) {
   const { t, lang } = useI18n();
@@ -165,17 +165,45 @@ export function ImportTemplateDialog({ photos, onCancel, onImport }: ImportTempl
 
           {processed && !isProcessing && (
             <>
-              <div className="flex items-center justify-between gap-3 rounded-[var(--radius-sm)] border border-line bg-surface px-3 py-2">
-                <span className="text-sm text-text">
-                  {mode === 'overlay'
-                    ? t.customTemplate.modeOverlay
-                    : t.customTemplate.modeBackground}
+              <div className="flex flex-col gap-1.5">
+                <span className="text-sm text-text-secondary">{t.customTemplate.modeQuestion}</span>
+                <div
+                  role="radiogroup"
+                  aria-label={t.customTemplate.modeQuestion}
+                  className="grid grid-cols-2 gap-2"
+                >
+                  {(
+                    [
+                      [
+                        'background',
+                        t.customTemplate.modeBackgroundLabel,
+                        t.customTemplate.modeBackgroundHint,
+                      ],
+                      [
+                        'overlay',
+                        t.customTemplate.modeOverlayLabel,
+                        t.customTemplate.modeOverlayHint,
+                      ],
+                    ] as const
+                  ).map(([value, label, hint]) => (
+                    <button
+                      key={value}
+                      type="button"
+                      role="radio"
+                      aria-checked={mode === value}
+                      onClick={() => setMode(value)}
+                      className={`flex flex-col items-start gap-0.5 rounded-[var(--radius-sm)] border p-3 text-left transition-opacity duration-150 ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sage ${
+                        mode === value ? 'border-sage bg-surface' : 'border-line hover:opacity-80'
+                      }`}
+                    >
+                      <span className="text-sm text-text">{label}</span>
+                      <span className="text-xs text-text-secondary">{hint}</span>
+                    </button>
+                  ))}
+                </div>
+                <span className="text-xs text-text-secondary">
+                  {t.customTemplate.modeDetectedNote}
                 </span>
-                <Toggle
-                  checked={mode === 'overlay'}
-                  onChange={(checked) => setMode(checked ? 'overlay' : 'background')}
-                  label={t.customTemplate.modeToggleLabel}
-                />
               </div>
 
               {previewTemplate && (

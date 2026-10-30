@@ -30,9 +30,12 @@ export interface Dictionary {
     namePlaceholder: string;
     fileLabel: string;
     detecting: string;
-    modeOverlay: string;
-    modeBackground: string;
-    modeToggleLabel: string;
+    modeQuestion: string;
+    modeBackgroundLabel: string;
+    modeBackgroundHint: string;
+    modeOverlayLabel: string;
+    modeOverlayHint: string;
+    modeDetectedNote: string;
     previewLabel: string;
     save: string;
     saving: string;
@@ -76,9 +79,12 @@ export const en: Dictionary = {
     namePlaceholder: 'My template',
     fileLabel: 'Your design (PNG)',
     detecting: 'Checking your design…',
-    modeOverlay: 'Frame overlaps photo',
-    modeBackground: 'Frame behind photo',
-    modeToggleLabel: 'Draw frame over the photo',
+    modeQuestion: 'Which should show on top where they overlap?',
+    modeBackgroundLabel: 'Photo in front',
+    modeBackgroundHint: 'Your photo fully covers this area',
+    modeOverlayLabel: 'Design in front',
+    modeOverlayHint: 'Your design can overlap the photo',
+    modeDetectedNote: 'Guessed from your file — tap either one to change it.',
     previewLabel: 'Preview',
     save: 'Import',
     saving: 'Importing…',

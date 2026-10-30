@@ -2,13 +2,24 @@ import { useRef, useState } from 'react';
 import { useCamera } from '../../hooks/useCamera';
 import { useCountdown } from '../../hooks/useCountdown';
 import { captureFrameFromVideo } from '../../lib/captureFrame';
+import { cropCanvasToBitmap, decodeImportedFile } from '../../lib/importImage';
+import type { Area } from 'react-easy-crop';
 import type { CameraFacing, SlotPhotos } from '../../types';
 import { CameraView } from './CameraView';
 import { CameraPermissionError } from './CameraPermissionError';
 import { SlotTray } from './SlotTray';
 import { CaptureSettings } from './CaptureSettings';
+import { CropDialog } from '../import/CropDialog';
 import { Button } from '../ui/Button';
 import { useI18n } from '../../i18n/useI18n';
+
+const SLOT_ASPECT = 4 / 3;
+
+interface PendingImport {
+  slotIndex: number;
+  canvas: HTMLCanvasElement;
+  objectUrl: string;
+}
 
 interface CaptureStepProps {
   photos: SlotPhotos;
@@ -30,6 +41,7 @@ export function CaptureStep({ photos, onPhotosChange }: CaptureStepProps) {
   const [countdownSeconds, setCountdownSeconds] = useState<3 | 5 | 10>(3);
   const [flashKey, setFlashKey] = useState(0);
   const [activeSlot, setActiveSlot] = useState<number | null>(null);
+  const [pendingImport, setPendingImport] = useState<PendingImport | null>(null);
 
   const isSequenceRef = useRef(false);
 
@@ -82,6 +94,33 @@ export function CaptureStep({ photos, onPhotosChange }: CaptureStepProps) {
     runSlot(slotIndex);
   }
 
+  async function handleImportFile(slotIndex: number, file: File) {
+    try {
+      const { canvas, objectUrl } = await decodeImportedFile(file);
+      setPendingImport({ slotIndex, canvas, objectUrl });
+    } catch {
+      // Unreadable/corrupt file — silently ignore, user can pick another.
+    }
+  }
+
+  function closePendingImport() {
+    if (pendingImport) URL.revokeObjectURL(pendingImport.objectUrl);
+    setPendingImport(null);
+  }
+
+  async function handleCropConfirm(area: Area) {
+    if (!pendingImport) return;
+    const { slotIndex, canvas } = pendingImport;
+    try {
+      const bitmap = await cropCanvasToBitmap(canvas, area);
+      const next = [...photos] as SlotPhotos;
+      next[slotIndex] = { bitmap, source: 'import' };
+      onPhotosChange(next);
+    } finally {
+      closePendingImport();
+    }
+  }
+
   function handleSwitchCamera() {
     const next: CameraFacing = facing === 'user' ? 'environment' : 'user';
     setFacing(next);
@@ -111,7 +150,14 @@ export function CaptureStep({ photos, onPhotosChange }: CaptureStepProps) {
         />
       )}
 
-      <SlotTray photos={photos} activeSlot={activeSlot} onRetake={handleRetake} disabled={isBusy} />
+      <SlotTray
+        photos={photos}
+        activeSlot={activeSlot}
+        onRetake={handleRetake}
+        onImportFile={handleImportFile}
+        cameraAvailable={!error}
+        disabled={isBusy}
+      />
 
       {!error && !allFilled && (
         <Button onClick={handleStart} disabled={isLoading || isBusy} className="w-full">
@@ -124,6 +170,15 @@ export function CaptureStep({ photos, onPhotosChange }: CaptureStepProps) {
             ? `แตะ "${t.common.retake}" เพื่อถ่ายใหม่ทีละภาพ`
             : `Tap "${t.common.retake}" on any shot to redo just that one.`}
         </p>
+      )}
+
+      {pendingImport && (
+        <CropDialog
+          imageUrl={pendingImport.objectUrl}
+          aspect={SLOT_ASPECT}
+          onCancel={closePendingImport}
+          onConfirm={handleCropConfirm}
+        />
       )}
     </div>
   );

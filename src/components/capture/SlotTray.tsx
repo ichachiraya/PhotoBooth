@@ -1,21 +1,32 @@
 import { RotateCcw } from 'lucide-react';
 import type { SlotPhotos } from '../../types';
 import { BitmapThumbnail } from '../ui/BitmapThumbnail';
+import { ImportButton } from '../import/ImportButton';
 import { useI18n } from '../../i18n/useI18n';
 
 interface SlotTrayProps {
   photos: SlotPhotos;
   activeSlot: number | null;
   onRetake: (slotIndex: number) => void;
+  onImportFile: (slotIndex: number, file: File) => void;
+  cameraAvailable: boolean;
   disabled?: boolean;
 }
 
 /**
- * Three slot thumbnails: empty ones show just a number, filled ones show
- * the captured/imported photo with a small retake control so any single
- * slot can be redone without restarting the whole sequence.
+ * Three slot thumbnails. Each slot can be filled independently by camera
+ * (Retake) or by importing an image (Import) — so camera and imported
+ * photos can be freely mixed across the 3 slots, and importing is always
+ * available as a fallback when the camera itself can't be used.
  */
-export function SlotTray({ photos, activeSlot, onRetake, disabled }: SlotTrayProps) {
+export function SlotTray({
+  photos,
+  activeSlot,
+  onRetake,
+  onImportFile,
+  cameraAvailable,
+  disabled,
+}: SlotTrayProps) {
   const { t } = useI18n();
 
   return (
@@ -30,24 +41,31 @@ export function SlotTray({ photos, activeSlot, onRetake, disabled }: SlotTrayPro
             } bg-surface`}
           >
             {photo ? (
-              <>
-                <BitmapThumbnail bitmap={photo.bitmap} mirrored={photo.source === 'camera'} />
+              <BitmapThumbnail bitmap={photo.bitmap} mirrored={photo.source === 'camera'} />
+            ) : (
+              <span className="absolute inset-0 flex items-center justify-center font-serif text-lg text-text-secondary">
+                {index + 1}
+              </span>
+            )}
+
+            <div className="absolute bottom-1 right-1 flex gap-1">
+              {cameraAvailable && (
                 <button
                   type="button"
                   onClick={() => onRetake(index)}
                   disabled={disabled}
                   aria-label={`${t.common.retake} ${index + 1}`}
                   title={t.common.retake}
-                  className="absolute bottom-1 right-1 inline-flex h-7 w-7 items-center justify-center rounded-[var(--radius-sm)] bg-bg/85 text-text disabled:cursor-not-allowed disabled:opacity-40"
+                  className="inline-flex h-7 w-7 items-center justify-center rounded-[var(--radius-sm)] bg-bg/85 text-text disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   <RotateCcw size={14} strokeWidth={1.5} />
                 </button>
-              </>
-            ) : (
-              <span className="absolute inset-0 flex items-center justify-center font-serif text-lg text-text-secondary">
-                {index + 1}
-              </span>
-            )}
+              )}
+              <ImportButton
+                disabled={disabled}
+                onFileSelected={(file) => onImportFile(index, file)}
+              />
+            </div>
           </div>
         );
       })}

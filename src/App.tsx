@@ -1,9 +1,11 @@
 import { useState } from 'react';
-import type { SlotPhotos, Step } from './types';
+import type { SlotPhotos, Step, Template } from './types';
 import { PageShell } from './components/layout/PageShell';
 import { LanguageToggle } from './components/ui/LanguageToggle';
 import { Button } from './components/ui/Button';
 import { CaptureStep } from './components/capture/CaptureStep';
+import { TemplatePicker } from './components/template/TemplatePicker';
+import { templates } from './templates';
 import { useI18n } from './i18n/useI18n';
 
 const STEP_ORDER: Step[] = ['template', 'capture', 'edit', 'save'];
@@ -17,6 +19,7 @@ const EMPTY_PHOTOS: SlotPhotos = [null, null, null];
 function App() {
   const [step, setStep] = useState<Step>('template');
   const [photos, setPhotos] = useState<SlotPhotos>(EMPTY_PHOTOS);
+  const [template, setTemplate] = useState<Template>(templates[0]!);
   const { t } = useI18n();
 
   const index = STEP_ORDER.indexOf(step);
@@ -30,9 +33,7 @@ function App() {
       <h1 className="text-center font-serif text-2xl">{t.appName}</h1>
 
       {step === 'template' && (
-        <div className="flex flex-1 flex-col items-center justify-center gap-4 rounded-[var(--radius-md)] border border-line bg-surface p-8 text-center">
-          <p className="text-text-secondary">Step: {t.steps.template}</p>
-        </div>
+        <TemplatePicker photos={photos} selectedId={template.id} onSelect={setTemplate} />
       )}
 
       {step === 'capture' && <CaptureStep photos={photos} onPhotosChange={setPhotos} />}

@@ -68,7 +68,10 @@ describe('template config validation', () => {
       });
 
       expect(template.id).toBe('custom-test-id');
-      expect(template.overlayDraw).toBeTypeOf('function');
+      // The uploaded image is the background (photos always draw on top of
+      // it in their slots), not an overlay — see customTemplateFactory.ts.
+      expect(template.background.kind).toBe('pattern');
+      expect(template.background.draw).toBeTypeOf('function');
       expectValidTemplate(template);
     });
   });

@@ -66,7 +66,7 @@ export const en: Dictionary = {
     dialogTitle: 'Import a custom template',
     downloadGuide: 'Download the template guide',
     instructions:
-      'Download the guide, design freely around the marked windows in any image editor, keep those windows transparent, then export a PNG at the same 600 × 1800 size and upload it below.',
+      "Download the guide, then design freely around the marked windows in any image editor — don't worry about what's inside them, your photos will fully cover that area regardless. Export a PNG at the same 600 × 1800 size and upload it below.",
     nameLabel: 'Name',
     namePlaceholder: 'My template',
     fileLabel: 'Your design (PNG)',

@@ -7,10 +7,14 @@ const { slots, caption } = defaultSlotLayout();
 /**
  * Turns a stored custom template record into an ordinary `Template` —
  * the rest of the app (compositor, thumbnails, picker, edit/save steps)
- * never needs to know a template is "custom" vs. built-in. The uploaded
- * PNG becomes the overlay: drawn after photos, so it shows through
- * wherever the person left it transparent — same mechanism the built-in
- * templates use for frame lines, sprocket holes, and floral borders.
+ * never needs to know a template is "custom" vs. built-in.
+ *
+ * The uploaded PNG is drawn as the *background* (a 'pattern' background
+ * whose draw callback just blits the bitmap), and photos always draw on
+ * top of it in their fixed slots — so there's no dependency on the
+ * person's file actually having real transparency in the window areas.
+ * Whatever they put there (even a solid fill) just gets covered by the
+ * photo; only the art outside the windows ever shows.
  */
 export async function buildCustomTemplate(stored: StoredCustomTemplate): Promise<Template> {
   const bitmap = await createImageBitmap(stored.imageBlob);
@@ -18,11 +22,13 @@ export async function buildCustomTemplate(stored: StoredCustomTemplate): Promise
   return {
     id: `custom-${stored.id}`,
     name: { en: stored.name, th: stored.name },
-    background: { kind: 'solid', color: '#FAF6EF' },
-    slots,
-    overlayDraw: (ctx, w, h) => {
-      ctx.drawImage(bitmap, 0, 0, w, h);
+    background: {
+      kind: 'pattern',
+      draw: (ctx, w, h) => {
+        ctx.drawImage(bitmap, 0, 0, w, h);
+      },
     },
+    slots,
     caption,
     font: { family: "'Cormorant Garamond', serif", size: 30, color: '#3B3631' },
   };

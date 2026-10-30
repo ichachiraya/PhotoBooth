@@ -6,8 +6,8 @@ const { slots, caption } = defaultSlotLayout();
 
 const LABELS = {
   photo: {
-    en: (n: number) => `Photo ${n} — keep transparent`,
-    th: (n: number) => `รูปที่ ${n} — เว้นโปร่งใส`,
+    en: (n: number) => `Photo ${n} — will be covered`,
+    th: (n: number) => `รูปที่ ${n} — จะถูกบังด้วยรูป`,
   },
   caption: { en: 'Caption area (optional)', th: 'พื้นที่คำบรรยาย (ไม่บังคับ)' },
 };
@@ -24,7 +24,6 @@ export function renderTemplateGuide(lang: Lang): HTMLCanvasElement {
   ctx.fillRect(0, 0, BASE_WIDTH, BASE_HEIGHT);
 
   ctx.strokeStyle = '#3B3631';
-  ctx.fillStyle = '#3B3631';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.font = '18px sans-serif';
@@ -32,7 +31,13 @@ export function renderTemplateGuide(lang: Lang): HTMLCanvasElement {
   ctx.setLineDash([8, 6]);
 
   slots.forEach((rect, i) => {
+    // Light fill so it's visually obvious this area doesn't matter — it'll
+    // be fully covered by the photo regardless of what's drawn here.
+    ctx.fillStyle = '#EFEFEF';
+    ctx.fillRect(rect.x, rect.y, rect.width, rect.height);
     ctx.strokeRect(rect.x, rect.y, rect.width, rect.height);
+
+    ctx.fillStyle = '#3B3631';
     const label = LABELS.photo[lang](i + 1);
     const lines = label.split(' — ');
     ctx.fillText(lines[0] ?? label, rect.x + rect.width / 2, rect.y + rect.height / 2 - 12);
@@ -40,6 +45,7 @@ export function renderTemplateGuide(lang: Lang): HTMLCanvasElement {
   });
 
   ctx.strokeRect(caption.x, caption.y, caption.width, caption.height);
+  ctx.fillStyle = '#3B3631';
   ctx.fillText(LABELS.caption[lang], caption.x + caption.width / 2, caption.y + caption.height / 2);
 
   ctx.setLineDash([]);

@@ -20,5 +20,7 @@ export const th: Dictionary = {
     newPhotoConfirm: 'ยังไม่ได้บันทึกแถบรูปนี้ ต้องการเริ่มใหม่หรือไม่?',
     newVersionAvailable: 'มีเวอร์ชันใหม่',
     refresh: 'รีเฟรช',
+    refreshConfirm: 'รูปภาพปัจจุบันจะหายไป ต้องการรีเฟรชต่อหรือไม่?',
+    refreshAnyway: 'รีเฟรชต่อ',
   },
 };

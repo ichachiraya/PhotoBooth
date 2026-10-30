@@ -18,6 +18,8 @@ export interface Dictionary {
     newPhotoConfirm: string;
     newVersionAvailable: string;
     refresh: string;
+    refreshConfirm: string;
+    refreshAnyway: string;
   };
 }
 
@@ -41,5 +43,7 @@ export const en: Dictionary = {
     newPhotoConfirm: "This strip hasn't been saved yet. Start a new one anyway?",
     newVersionAvailable: 'New version available',
     refresh: 'Refresh',
+    refreshConfirm: 'Your current photos will be lost. Refresh anyway?',
+    refreshAnyway: 'Refresh anyway',
   },
 };

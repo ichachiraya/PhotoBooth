@@ -66,7 +66,11 @@ function App() {
   const canGoNext = step === 'capture' ? photos.every((p) => p !== null) : true;
 
   return (
-    <PageShell step={step} headerActions={<LanguageToggle />}>
+    <PageShell
+      step={step}
+      headerActions={<LanguageToggle />}
+      hasUnsavedPhotos={hasAnyPhoto && !isSaved}
+    >
       <h1 className="text-center font-serif text-2xl">{t.appName}</h1>
 
       {step === 'template' && (

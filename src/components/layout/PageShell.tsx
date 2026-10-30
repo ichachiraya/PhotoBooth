@@ -9,13 +9,19 @@ interface PageShellProps {
   step: Step;
   children: ReactNode;
   headerActions?: ReactNode;
+  hasUnsavedPhotos?: boolean;
 }
 
 /**
  * Shared page frame: floral background, step indicator, narrow centered
  * column, privacy note footer. Every screen in the flow renders inside this.
  */
-export function PageShell({ step, children, headerActions }: PageShellProps) {
+export function PageShell({
+  step,
+  children,
+  headerActions,
+  hasUnsavedPhotos = false,
+}: PageShellProps) {
   const { t } = useI18n();
 
   return (
@@ -28,7 +34,7 @@ export function PageShell({ step, children, headerActions }: PageShellProps) {
         <div className="flex w-10 justify-end">{headerActions}</div>
       </header>
 
-      <UpdateNotice />
+      <UpdateNotice hasUnsavedPhotos={hasUnsavedPhotos} />
 
       <main className="mx-auto flex w-full max-w-[480px] flex-1 flex-col gap-6 px-4 py-8">
         {children}

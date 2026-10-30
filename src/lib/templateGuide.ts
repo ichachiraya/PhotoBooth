@@ -6,17 +6,22 @@ const { slots } = defaultSlotLayout();
 
 const LABELS = {
   photo: {
-    en: (n: number) => `Photo ${n} — will be covered`,
-    th: (n: number) => `รูปที่ ${n} — จะถูกบังด้วยรูป`,
+    en: (n: number) => `Photo ${n} — transparent`,
+    th: (n: number) => `รูปที่ ${n} — โปร่งใส`,
   },
 };
 
 /**
- * Draws the 600x1800 guide: just the 3 photo windows, outlined and
- * labeled — no caption area marked. The Edit step's optional caption
- * text/date stamp still works normally on a custom template (same as
- * any built-in one); it just isn't part of what someone designs around
- * here, to keep the guide simple.
+ * Draws the 600x1800 guide: a white "canvas" to design on, with the 3
+ * photo windows punched out as real transparent holes (not just an
+ * opaque placeholder fill) and labeled. If someone designs directly on
+ * top of this file rather than starting from scratch, the windows stay
+ * transparent automatically unless they deliberately paint over them —
+ * so "Design in front" mode works correctly without relying on them to
+ * remember to clear that area themselves. No caption area marked — the
+ * Edit step's optional caption text/date stamp still works normally on
+ * a custom template either way; it just isn't part of what someone
+ * designs around here, to keep the guide simple.
  */
 export function renderTemplateGuide(lang: Lang): HTMLCanvasElement {
   const canvas = document.createElement('canvas');
@@ -36,10 +41,8 @@ export function renderTemplateGuide(lang: Lang): HTMLCanvasElement {
   ctx.setLineDash([8, 6]);
 
   slots.forEach((rect, i) => {
-    // Light fill so it's visually obvious this area doesn't matter — it'll
-    // be fully covered by the photo regardless of what's drawn here.
-    ctx.fillStyle = '#EFEFEF';
-    ctx.fillRect(rect.x, rect.y, rect.width, rect.height);
+    // A real transparent hole, not a solid fill — see the doc comment above.
+    ctx.clearRect(rect.x, rect.y, rect.width, rect.height);
     ctx.strokeRect(rect.x, rect.y, rect.width, rect.height);
 
     ctx.fillStyle = '#3B3631';

@@ -38,7 +38,7 @@ interface ProcessedUpload {
  * people to infer what "on" means) in case the detected guess is wrong.
  */
 export function ImportTemplateDialog({ photos, onCancel, onImport }: ImportTemplateDialogProps) {
-  const { t, lang } = useI18n();
+  const { t } = useI18n();
   const [name, setName] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [processed, setProcessed] = useState<ProcessedUpload | null>(null);
@@ -91,7 +91,7 @@ export function ImportTemplateDialog({ photos, onCancel, onImport }: ImportTempl
 
   async function handleDownloadGuide() {
     try {
-      await downloadTemplateGuide(lang);
+      await downloadTemplateGuide();
     } catch {
       setError(t.customTemplate.errorGeneric);
     }

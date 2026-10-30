@@ -1,0 +1,95 @@
+@import 'tailwindcss';
+
+/* Self-hosted fonts (no runtime calls to Google Fonts) */
+@import '@fontsource/cormorant-garamond/400.css';
+@import '@fontsource/cormorant-garamond/500.css';
+@import '@fontsource/cormorant-garamond/600.css';
+@import '@fontsource/noto-serif-thai/400.css';
+@import '@fontsource/noto-serif-thai/500.css';
+@import '@fontsource/noto-serif-thai/600.css';
+@import '@fontsource/ibm-plex-sans-thai/300.css';
+@import '@fontsource/ibm-plex-sans-thai/400.css';
+@import '@fontsource/ibm-plex-sans-thai/500.css';
+
+/* ---- Design tokens ---- */
+:root {
+  --color-bg: #faf6ef;
+  --color-surface: #f3ede3;
+  --color-text: #3b3631;
+  --color-text-secondary: #756c63;
+  --color-accent-sage: #9aa58e;
+  --color-accent-rose: #d4a5a0;
+  --color-border: #e4dbcd;
+
+  --radius-sm: 2px;
+  --radius-md: 6px;
+
+  --font-serif: 'Cormorant Garamond', 'Noto Serif Thai', serif;
+  --font-sans: 'IBM Plex Sans Thai', ui-sans-serif, system-ui, sans-serif;
+}
+
+@theme {
+  --color-bg: #faf6ef;
+  --color-surface: #f3ede3;
+  --color-text: #3b3631;
+  --color-text-secondary: #756c63;
+  --color-sage: #9aa58e;
+  --color-rose: #d4a5a0;
+  --color-line: #e4dbcd;
+
+  --radius-sm: 2px;
+  --radius-md: 6px;
+
+  --font-serif: 'Cormorant Garamond', 'Noto Serif Thai', serif;
+  --font-sans: 'IBM Plex Sans Thai', ui-sans-serif, system-ui, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  line-height: 1.6;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-serif);
+  font-weight: 500;
+  line-height: 1.25;
+}
+
+:lang(th) {
+  line-height: 1.8;
+}
+
+.u-label {
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-size: 0.72rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}

@@ -16,5 +16,7 @@ export const th: Dictionary = {
     cancel: 'ยกเลิก',
     confirm: 'ยืนยัน',
     loading: 'กำลังโหลด…',
+    newPhoto: 'ถ่ายรูปใหม่',
+    newPhotoConfirm: 'ยังไม่ได้บันทึกแถบรูปนี้ ต้องการเริ่มใหม่หรือไม่?',
   },
 };

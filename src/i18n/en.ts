@@ -14,6 +14,8 @@ export interface Dictionary {
     cancel: string;
     confirm: string;
     loading: string;
+    newPhoto: string;
+    newPhotoConfirm: string;
   };
 }
 
@@ -33,5 +35,7 @@ export const en: Dictionary = {
     cancel: 'Cancel',
     confirm: 'Confirm',
     loading: 'Loading…',
+    newPhoto: 'New photo',
+    newPhotoConfirm: "This strip hasn't been saved yet. Start a new one anyway?",
   },
 };

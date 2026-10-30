@@ -47,6 +47,18 @@ function App() {
   const hasAnyPhoto = photos.some((p) => p !== null);
   useBeforeUnload(hasAnyPhoto && !isSaved);
 
+  function handleNewPhoto() {
+    if (hasAnyPhoto && !isSaved) {
+      if (!window.confirm(t.common.newPhotoConfirm)) return;
+    }
+    photos.forEach((photo) => photo?.bitmap.close());
+    setPhotos(EMPTY_PHOTOS);
+    setTemplate(templates[0]!);
+    setStripOptions(DEFAULT_STRIP_OPTIONS);
+    setIsSaved(false);
+    setStep('template');
+  }
+
   const index = STEP_ORDER.indexOf(step);
   const goNext = () => setStep(STEP_ORDER[Math.min(index + 1, STEP_ORDER.length - 1)]!);
   const goBack = () => setStep(STEP_ORDER[Math.max(index - 1, 0)]!);
@@ -79,6 +91,7 @@ function App() {
           options={stripOptions}
           onOptionsChange={updateOptions}
           onSaved={() => setIsSaved(true)}
+          onNewPhoto={handleNewPhoto}
         />
       )}
 

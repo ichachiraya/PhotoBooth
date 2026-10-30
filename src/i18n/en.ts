@@ -16,6 +16,8 @@ export interface Dictionary {
     loading: string;
     newPhoto: string;
     newPhotoConfirm: string;
+    newVersionAvailable: string;
+    refresh: string;
   };
 }
 
@@ -37,5 +39,7 @@ export const en: Dictionary = {
     loading: 'Loading…',
     newPhoto: 'New photo',
     newPhotoConfirm: "This strip hasn't been saved yet. Start a new one anyway?",
+    newVersionAvailable: 'New version available',
+    refresh: 'Refresh',
   },
 };

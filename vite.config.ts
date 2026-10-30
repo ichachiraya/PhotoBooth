@@ -9,7 +9,12 @@ export default defineConfig({
     react(),
     tailwindcss(),
     VitePWA({
-      registerType: 'autoUpdate',
+      // 'prompt', not 'autoUpdate': a silent auto-reload could land mid-capture
+      // (camera running, photos shot but not yet saved) and lose that work.
+      // We register manually (useRegisterSW, below) and show a small "New
+      // version available · Refresh" notice the person can act on when ready.
+      registerType: 'prompt',
+      injectRegister: null,
       includeAssets: ['favicon.svg', 'pwa-192.png', 'pwa-512.png', 'pwa-maskable.png'],
       manifest: {
         name: 'Photo Booth',
@@ -27,6 +32,9 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
+        // Removes the previous deploy's cached assets once the new SW activates,
+        // instead of letting old precache versions pile up in storage forever.
+        cleanupOutdatedCaches: true,
       },
       devOptions: {
         enabled: false,

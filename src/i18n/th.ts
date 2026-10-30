@@ -18,5 +18,7 @@ export const th: Dictionary = {
     loading: 'กำลังโหลด…',
     newPhoto: 'ถ่ายรูปใหม่',
     newPhotoConfirm: 'ยังไม่ได้บันทึกแถบรูปนี้ ต้องการเริ่มใหม่หรือไม่?',
+    newVersionAvailable: 'มีเวอร์ชันใหม่',
+    refresh: 'รีเฟรช',
   },
 };

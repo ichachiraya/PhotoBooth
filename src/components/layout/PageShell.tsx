@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import type { Step } from '../../types';
 import { StepIndicator } from './StepIndicator';
 import { FloralBackground } from './FloralBackground';
+import { UpdateNotice } from './UpdateNotice';
 import { useI18n } from '../../i18n/useI18n';
 
 interface PageShellProps {
@@ -26,6 +27,8 @@ export function PageShell({ step, children, headerActions }: PageShellProps) {
         <StepIndicator current={step} />
         <div className="flex w-10 justify-end">{headerActions}</div>
       </header>
+
+      <UpdateNotice />
 
       <main className="mx-auto flex w-full max-w-[480px] flex-1 flex-col gap-6 px-4 py-8">
         {children}

@@ -1,5 +1,63 @@
+interface SprigPlacement {
+  /** Tailwind position + size classes. */
+  className: string;
+  color: 'sage' | 'rose';
+  opacity: number;
+  rotate?: number;
+  flip?: boolean;
+}
+
+/** One reusable botanical line-art shape — a stem with a few leaves and a small flower head. */
+function Sprig({ className, color, opacity, rotate = 0, flip = false }: SprigPlacement) {
+  return (
+    <svg
+      className={`absolute ${color === 'sage' ? 'text-sage' : 'text-rose'} ${className}`}
+      style={{ opacity, transform: `rotate(${rotate}deg) scaleX(${flip ? -1 : 1})` }}
+      viewBox="0 0 120 160"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.3"
+    >
+      <path d="M20 150 C 45 115, 38 75, 62 35" strokeLinecap="round" />
+      <path d="M30 118 C 48 114, 56 102, 58 88" strokeLinecap="round" />
+      <path d="M44 84 C 58 80, 66 68, 68 54" strokeLinecap="round" />
+      <path d="M26 95 C 14 92, 6 82, 4 70" strokeLinecap="round" />
+      <circle cx="62" cy="32" r="5.5" />
+      <circle cx="71" cy="25" r="3.8" />
+      <circle cx="53" cy="27" r="3.8" />
+      <circle cx="63" cy="22" r="2.6" />
+    </svg>
+  );
+}
+
+// Loosely scattered along every edge (not just corners) so wider/taller
+// screens read as framed rather than leaving long bare margins. Still
+// kept out of the centered content column, low-opacity, and static.
+const SPRIGS: SprigPlacement[] = [
+  { className: 'h-40 w-40 -left-7 -top-7', color: 'sage', opacity: 0.2 },
+  { className: 'h-48 w-48 -right-9 top-2', color: 'rose', opacity: 0.17, flip: true },
+  {
+    className: 'h-32 w-32 left-[4%] top-[32%]',
+    color: 'rose',
+    opacity: 0.16,
+    rotate: -18,
+    flip: true,
+  },
+  { className: 'h-32 w-32 right-[4%] top-[38%]', color: 'sage', opacity: 0.18, rotate: 16 },
+  { className: 'h-32 w-32 -left-8 bottom-[26%]', color: 'sage', opacity: 0.16, rotate: 12 },
+  {
+    className: 'h-32 w-32 -right-7 bottom-[22%]',
+    color: 'sage',
+    opacity: 0.15,
+    rotate: -14,
+    flip: true,
+  },
+  { className: 'h-52 w-52 -bottom-11 left-1', color: 'rose', opacity: 0.18, rotate: 6 },
+  { className: 'h-44 w-44 -bottom-9 -right-6', color: 'sage', opacity: 0.2, flip: true },
+];
+
 /**
- * Static, decorative line-art botanicals placed loosely in the corners,
+ * Static, decorative line-art botanicals scattered along the page edges,
  * plus a very subtle paper-grain texture. Purely inline SVG — no external
  * assets, no animation, kept out of the way of controls/camera preview.
  * `aria-hidden` since it carries no content.
@@ -18,68 +76,9 @@ export function FloralBackground() {
         <rect width="100%" height="100%" filter="url(#paper-grain)" />
       </svg>
 
-      {/* top-left sprig */}
-      <svg
-        className="absolute -left-6 -top-6 h-40 w-40 text-sage opacity-[0.14]"
-        viewBox="0 0 160 160"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.2"
-      >
-        <path d="M20 140 C 40 110, 35 70, 60 30" strokeLinecap="round" />
-        <path d="M30 110 C 45 108, 52 98, 55 85" strokeLinecap="round" />
-        <path d="M42 80 C 55 78, 62 68, 64 56" strokeLinecap="round" />
-        <circle cx="60" cy="28" r="5" />
-        <circle cx="68" cy="22" r="3.5" />
-        <circle cx="52" cy="24" r="3.5" />
-      </svg>
-
-      {/* top-right sprig */}
-      <svg
-        className="absolute -right-8 top-4 h-48 w-48 text-rose opacity-[0.12]"
-        viewBox="0 0 180 180"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.2"
-      >
-        <path d="M160 10 C 130 30, 120 60, 95 75" strokeLinecap="round" />
-        <path d="M135 35 C 125 45, 112 48, 100 52" strokeLinecap="round" />
-        <path d="M110 55 C 100 62, 90 64, 80 66" strokeLinecap="round" />
-        <circle cx="95" cy="76" r="6" />
-        <circle cx="86" cy="84" r="4" />
-        <circle cx="104" cy="83" r="4" />
-      </svg>
-
-      {/* bottom-left sprig */}
-      <svg
-        className="absolute -bottom-10 left-2 h-52 w-52 text-rose opacity-[0.12]"
-        viewBox="0 0 200 200"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.2"
-      >
-        <path d="M10 190 C 40 170, 55 140, 60 105" strokeLinecap="round" />
-        <path d="M22 160 C 38 155, 48 142, 50 128" strokeLinecap="round" />
-        <path d="M38 125 C 52 120, 60 108, 62 96" strokeLinecap="round" />
-        <circle cx="60" cy="100" r="6" />
-        <circle cx="50" cy="92" r="4" />
-        <circle cx="70" cy="90" r="4" />
-      </svg>
-
-      {/* bottom-right sprig */}
-      <svg
-        className="absolute -bottom-8 -right-6 h-44 w-44 text-sage opacity-[0.14]"
-        viewBox="0 0 170 170"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="1.2"
-      >
-        <path d="M160 160 C 130 145, 118 118, 118 90" strokeLinecap="round" />
-        <path d="M140 130 C 128 128, 118 120, 112 110" strokeLinecap="round" />
-        <circle cx="117" cy="88" r="5.5" />
-        <circle cx="108" cy="80" r="3.5" />
-        <circle cx="124" cy="78" r="3.5" />
-      </svg>
+      {SPRIGS.map((placement, i) => (
+        <Sprig key={i} {...placement} />
+      ))}
     </div>
   );
 }

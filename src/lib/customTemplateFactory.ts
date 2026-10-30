@@ -1,7 +1,7 @@
 import type { Template } from '../types';
-import type { StoredCustomTemplate } from './customTemplateStore';
-import { defaultSlotLayout } from './layout';
-import type { TemplateOverlayMode } from './templateOverlayDetection';
+import { type StoredCustomTemplate, updateCustomTemplate } from './customTemplateStore';
+import { defaultSlotLayout, BASE_HEIGHT, BASE_WIDTH } from './layout';
+import { detectTemplateOverlayMode, type TemplateOverlayMode } from './templateOverlayDetection';
 
 const { slots, caption } = defaultSlotLayout();
 
@@ -44,7 +44,22 @@ export function buildTemplateFromBitmap(
 /** Turns a stored custom template record into an ordinary `Template`. */
 export async function buildCustomTemplate(stored: StoredCustomTemplate): Promise<Template> {
   const bitmap = await createImageBitmap(stored.imageBlob);
-  // Defensive fallback for any record saved before `mode` existed.
-  const mode: TemplateOverlayMode = stored.mode === 'overlay' ? 'overlay' : 'background';
+
+  let mode: TemplateOverlayMode;
+  if (stored.mode === 'overlay' || stored.mode === 'background') {
+    mode = stored.mode;
+  } else {
+    // A record saved before `mode` existed — detect it now instead of
+    // silently defaulting to 'background' forever, and persist the fix
+    // so this only has to happen once per legacy template.
+    const canvas = document.createElement('canvas');
+    canvas.width = BASE_WIDTH;
+    canvas.height = BASE_HEIGHT;
+    const ctx = canvas.getContext('2d');
+    ctx?.drawImage(bitmap, 0, 0, BASE_WIDTH, BASE_HEIGHT);
+    mode = detectTemplateOverlayMode(canvas);
+    void updateCustomTemplate({ ...stored, mode });
+  }
+
   return buildTemplateFromBitmap(bitmap, mode, `custom-${stored.id}`, stored.name);
 }

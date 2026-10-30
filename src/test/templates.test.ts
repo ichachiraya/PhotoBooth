@@ -1,6 +1,7 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { templates } from '../templates';
 import { buildCustomTemplate } from '../lib/customTemplateFactory';
+import * as customTemplateStore from '../lib/customTemplateStore';
 import { BASE_HEIGHT, BASE_WIDTH } from '../lib/layout';
 import type { Template } from '../types';
 
@@ -91,7 +92,7 @@ describe('template config validation', () => {
       expectValidTemplate(template);
     });
 
-    it('falls back to "background" mode for a record saved before `mode` existed', async () => {
+    it('re-detects the mode for a record saved before `mode` existed, instead of silently defaulting to one', async () => {
       const legacyRecord = {
         id: 'legacy-id',
         name: 'Old Template',
@@ -101,8 +102,30 @@ describe('template config validation', () => {
       } as unknown as Parameters<typeof buildCustomTemplate>[0];
 
       const template = await buildCustomTemplate(legacyRecord);
-      expect(template.background.kind).toBe('pattern');
-      expect(template.overlayDraw).toBeUndefined();
+      // Whichever mode detection lands on, the template built from it must
+      // still be internally consistent (exactly one of the two draw paths set).
+      const isBackground = template.background.kind === 'pattern' && !template.overlayDraw;
+      const isOverlay = template.background.kind === 'solid' && !!template.overlayDraw;
+      expect(isBackground || isOverlay).toBe(true);
+    });
+
+    it('persists the re-detected mode so a legacy record only has to be re-detected once', async () => {
+      const updateSpy = vi.spyOn(customTemplateStore, 'updateCustomTemplate');
+      const legacyRecord = {
+        id: 'legacy-id-2',
+        name: 'Old Template',
+        createdAt: Date.now(),
+        imageBlob: new Blob(['fake-png-bytes'], { type: 'image/png' }),
+      } as unknown as Parameters<typeof buildCustomTemplate>[0];
+
+      await buildCustomTemplate(legacyRecord);
+
+      expect(updateSpy).toHaveBeenCalledTimes(1);
+      const persisted = updateSpy.mock.calls[0]?.[0];
+      expect(persisted?.id).toBe('legacy-id-2');
+      expect(['overlay', 'background']).toContain(persisted?.mode);
+
+      updateSpy.mockRestore();
     });
   });
 });

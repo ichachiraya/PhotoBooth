@@ -87,3 +87,18 @@ export async function saveCustomTemplate(input: {
 export async function deleteCustomTemplate(id: string): Promise<void> {
   await withStore('readwrite', (store) => store.delete(id));
 }
+
+/**
+ * Overwrites a stored record in place (used to persist a mode that had
+ * to be re-detected for a record saved before `mode` existed, so it's
+ * only ever re-detected once instead of on every load). Failing to
+ * persist this is non-fatal — the caller already has the corrected
+ * in-memory value for this session either way — so errors are swallowed.
+ */
+export async function updateCustomTemplate(record: StoredCustomTemplate): Promise<void> {
+  try {
+    await withStore('readwrite', (store) => store.put(record));
+  } catch {
+    // Best-effort; the in-memory template this session still uses the right mode.
+  }
+}

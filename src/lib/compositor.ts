@@ -1,5 +1,6 @@
-import type { SlotPhoto, SlotPhotos, Template } from '../types';
+import type { FilterId, SlotPhoto, SlotPhotos, Template } from '../types';
 import { coverFit } from './coverFit';
+import { applyFilterToImageData, FILTER_CSS, supportsCanvasFilter } from './filters';
 import { BASE_HEIGHT, BASE_WIDTH, HQ_SCALE } from './layout';
 
 export interface CompositeOptions {
@@ -8,8 +9,8 @@ export interface CompositeOptions {
   scale?: number;
   /** Mirror camera-sourced photos horizontally to match the (default-mirrored) live preview. */
   mirrorExport?: boolean;
-  /** CSS filter string (e.g. from lib/filters.ts) applied to photos only, not the template chrome. */
-  filterCss?: string;
+  /** Applied uniformly to all 3 photos (never to the template's own chrome). */
+  filter?: FilterId;
   caption?: string;
   showDateStamp?: boolean;
 }
@@ -42,39 +43,72 @@ function drawBackground(
   }
 }
 
+/**
+ * Pre-filters the cropped source region into a small offscreen canvas via
+ * direct pixel manipulation. Used only on the fallback path (no real
+ * `ctx.filter` support) — filtering the *source* this way, rather than
+ * post-processing the destination with getImageData/putImageData, keeps
+ * the result correct regardless of the destination's current transform
+ * (mirroring, the outer base->output scale, etc.), since the filtered
+ * result is then just drawn like any other image source.
+ */
+function filterCroppedSource(
+  bitmap: ImageBitmap,
+  crop: { x: number; y: number; width: number; height: number },
+  filter: FilterId,
+): HTMLCanvasElement {
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.max(1, Math.round(crop.width));
+  canvas.height = Math.max(1, Math.round(crop.height));
+  const ctx = canvas.getContext('2d');
+  if (!ctx) throw new Error('Canvas 2D context unavailable');
+  ctx.drawImage(bitmap, crop.x, crop.y, crop.width, crop.height, 0, 0, canvas.width, canvas.height);
+  const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  applyFilterToImageData(imageData, filter);
+  ctx.putImageData(imageData, 0, 0);
+  return canvas;
+}
+
 function drawPhotoInSlot(
   ctx: CanvasRenderingContext2D,
   photo: SlotPhoto,
   rect: { x: number; y: number; width: number; height: number },
   mirrorExport: boolean,
-  filterCss: string | undefined,
+  filter: FilterId,
+  nativeFilterSupported: boolean,
 ) {
   const { bitmap, source } = photo;
   const crop = coverFit(bitmap.width, bitmap.height, rect.width, rect.height);
   const shouldMirror = mirrorExport && source === 'camera';
+  const useNativeFilter = filter !== 'none' && nativeFilterSupported;
+  const useFallbackFilter = filter !== 'none' && !nativeFilterSupported;
+
+  let drawSource: CanvasImageSource = bitmap;
+  let sx = crop.x;
+  let sy = crop.y;
+  let sw = crop.width;
+  let sh = crop.height;
+  if (useFallbackFilter) {
+    const filtered = filterCroppedSource(bitmap, crop, filter);
+    drawSource = filtered;
+    sx = 0;
+    sy = 0;
+    sw = filtered.width;
+    sh = filtered.height;
+  }
 
   ctx.save();
   ctx.beginPath();
   ctx.rect(rect.x, rect.y, rect.width, rect.height);
   ctx.clip();
-  if (filterCss) ctx.filter = filterCss;
+  if (useNativeFilter) ctx.filter = FILTER_CSS[filter];
 
   if (shouldMirror) {
     ctx.translate(rect.x + rect.width, rect.y);
     ctx.scale(-1, 1);
-    ctx.drawImage(bitmap, crop.x, crop.y, crop.width, crop.height, 0, 0, rect.width, rect.height);
+    ctx.drawImage(drawSource, sx, sy, sw, sh, 0, 0, rect.width, rect.height);
   } else {
-    ctx.drawImage(
-      bitmap,
-      crop.x,
-      crop.y,
-      crop.width,
-      crop.height,
-      rect.x,
-      rect.y,
-      rect.width,
-      rect.height,
-    );
+    ctx.drawImage(drawSource, sx, sy, sw, sh, rect.x, rect.y, rect.width, rect.height);
   }
   ctx.restore();
 }
@@ -142,10 +176,13 @@ export function renderStrip(
 
   drawBackground(ctx, template.background, BASE_WIDTH, BASE_HEIGHT);
 
+  const filter = options.filter ?? 'none';
+  const nativeFilterSupported = filter === 'none' || supportsCanvasFilter();
+
   template.slots.forEach((rect, i) => {
     const photo = photos[i];
     if (!photo) return;
-    drawPhotoInSlot(ctx, photo, rect, options.mirrorExport ?? false, options.filterCss);
+    drawPhotoInSlot(ctx, photo, rect, options.mirrorExport ?? false, filter, nativeFilterSupported);
   });
 
   template.overlayDraw?.(ctx, BASE_WIDTH, BASE_HEIGHT);

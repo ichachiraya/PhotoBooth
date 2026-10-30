@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { renderStrip } from '../lib/compositor';
 import { classicWhite } from '../templates/classicWhite';
 import { BASE_HEIGHT, BASE_WIDTH, HQ_SCALE } from '../lib/layout';
-import type { SlotPhoto, SlotPhotos } from '../types';
+import type { FilterId, SlotPhoto, SlotPhotos } from '../types';
 
 // The global test setup (src/test/setup.ts) installs a no-op canvas 2D
 // context, since jsdom has no real renderer — see mockCanvasContext.ts.
@@ -33,5 +33,12 @@ describe('renderStrip', () => {
 
   it('does not throw when a slot has no photo yet', () => {
     expect(() => renderStrip(classicWhite, [null, null, null])).not.toThrow();
+  });
+
+  it('runs the per-pixel filter pipeline for every filter without throwing', () => {
+    const allFilters: FilterId[] = ['none', 'bw', 'sepia', 'vintage', 'contrast', 'warm', 'cool'];
+    for (const filter of allFilters) {
+      expect(() => renderStrip(classicWhite, photos, { filter })).not.toThrow();
+    }
   });
 });

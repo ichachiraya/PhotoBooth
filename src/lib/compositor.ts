@@ -1,6 +1,6 @@
 import type { FilterId, SlotPhoto, SlotPhotos, Template } from '../types';
 import { coverFit } from './coverFit';
-import { applyFilterToImageData, FILTER_CSS, supportsCanvasFilter } from './filters';
+import { applyFilterToImageData } from './filters';
 import { BASE_HEIGHT, BASE_WIDTH, HQ_SCALE } from './layout';
 
 export interface CompositeOptions {
@@ -45,9 +45,12 @@ function drawBackground(
 
 /**
  * Pre-filters the cropped source region into a small offscreen canvas via
- * direct pixel manipulation. Used only on the fallback path (no real
- * `ctx.filter` support) — filtering the *source* this way, rather than
- * post-processing the destination with getImageData/putImageData, keeps
+ * direct pixel manipulation, rather than relying on the native canvas
+ * `ctx.filter` property. Filters are always applied this way: it's
+ * guaranteed to look identical across every browser (no dependency on a
+ * native implementation that can be buggy, slow, or silently a no-op on
+ * some engines), and filtering the *source* like this — rather than
+ * post-processing the destination with getImageData/putImageData — keeps
  * the result correct regardless of the destination's current transform
  * (mirroring, the outer base->output scale, etc.), since the filtered
  * result is then just drawn like any other image source.
@@ -75,20 +78,17 @@ function drawPhotoInSlot(
   rect: { x: number; y: number; width: number; height: number },
   mirrorExport: boolean,
   filter: FilterId,
-  nativeFilterSupported: boolean,
 ) {
   const { bitmap, source } = photo;
   const crop = coverFit(bitmap.width, bitmap.height, rect.width, rect.height);
   const shouldMirror = mirrorExport && source === 'camera';
-  const useNativeFilter = filter !== 'none' && nativeFilterSupported;
-  const useFallbackFilter = filter !== 'none' && !nativeFilterSupported;
 
   let drawSource: CanvasImageSource = bitmap;
   let sx = crop.x;
   let sy = crop.y;
   let sw = crop.width;
   let sh = crop.height;
-  if (useFallbackFilter) {
+  if (filter !== 'none') {
     const filtered = filterCroppedSource(bitmap, crop, filter);
     drawSource = filtered;
     sx = 0;
@@ -101,7 +101,6 @@ function drawPhotoInSlot(
   ctx.beginPath();
   ctx.rect(rect.x, rect.y, rect.width, rect.height);
   ctx.clip();
-  if (useNativeFilter) ctx.filter = FILTER_CSS[filter];
 
   if (shouldMirror) {
     ctx.translate(rect.x + rect.width, rect.y);
@@ -177,12 +176,11 @@ export function renderStrip(
   drawBackground(ctx, template.background, BASE_WIDTH, BASE_HEIGHT);
 
   const filter = options.filter ?? 'none';
-  const nativeFilterSupported = filter === 'none' || supportsCanvasFilter();
 
   template.slots.forEach((rect, i) => {
     const photo = photos[i];
     if (!photo) return;
-    drawPhotoInSlot(ctx, photo, rect, options.mirrorExport ?? false, filter, nativeFilterSupported);
+    drawPhotoInSlot(ctx, photo, rect, options.mirrorExport ?? false, filter);
   });
 
   template.overlayDraw?.(ctx, BASE_WIDTH, BASE_HEIGHT);

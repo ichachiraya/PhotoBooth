@@ -9,6 +9,7 @@ export function FlashOverlay({ flashKey }: { flashKey: number }) {
       key={flashKey}
       aria-hidden="true"
       className="pointer-events-none absolute inset-0 animate-[flash-fade_260ms_ease-out] bg-bg"
+      style={{ animationFillMode: 'forwards' }}
     />
   );
 }

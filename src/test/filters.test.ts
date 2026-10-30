@@ -1,27 +1,15 @@
 import { describe, expect, it } from 'vitest';
-import {
-  applyFilterToImageData,
-  FILTER_CSS,
-  FILTER_LABELS,
-  FILTER_ORDER,
-  supportsCanvasFilter,
-} from '../lib/filters';
+import { applyFilterToImageData, FILTER_LABELS, FILTER_ORDER } from '../lib/filters';
 import type { FilterId } from '../types';
 
 describe('filter selection', () => {
-  it('defines a CSS string, label, and ordering entry for every FilterId', () => {
+  it('defines a label and ordering entry for every FilterId', () => {
     const expected: FilterId[] = ['none', 'bw', 'sepia', 'vintage', 'contrast', 'warm', 'cool'];
     for (const id of expected) {
-      expect(FILTER_CSS[id]).toBeDefined();
       expect(FILTER_LABELS[id].en.length).toBeGreaterThan(0);
       expect(FILTER_LABELS[id].th.length).toBeGreaterThan(0);
       expect(FILTER_ORDER).toContain(id);
     }
-    expect(FILTER_CSS.none).toBe('');
-  });
-
-  it('feature-detects ctx.filter support without throwing', () => {
-    expect(typeof supportsCanvasFilter()).toBe('boolean');
   });
 
   function makeImageData(pixels: number[][]): ImageData {

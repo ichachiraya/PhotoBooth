@@ -1,16 +1,5 @@
 import type { FilterId } from '../types';
 
-/** `ctx.filter` CSS filter strings for browsers that support Canvas filters. */
-export const FILTER_CSS: Record<FilterId, string> = {
-  none: '',
-  bw: 'grayscale(1)',
-  sepia: 'sepia(0.9)',
-  vintage: 'sepia(0.35) contrast(0.9) saturate(0.8) brightness(1.05)',
-  contrast: 'contrast(1.4) saturate(1.15)',
-  warm: 'sepia(0.15) saturate(1.15) brightness(1.04) hue-rotate(-6deg)',
-  cool: 'saturate(1.05) hue-rotate(10deg) brightness(1.02)',
-};
-
 export const FILTER_ORDER: FilterId[] = [
   'none',
   'bw',
@@ -31,30 +20,13 @@ export const FILTER_LABELS: Record<FilterId, { en: string; th: string }> = {
   cool: { en: 'Cool', th: 'เย็น' },
 };
 
-/**
- * Feature-detects real support for Canvas `ctx.filter` (some older Safari
- * versions accept the property without actually applying any effect).
- * Checked once; callers cache the result for the session.
- */
-export function supportsCanvasFilter(): boolean {
-  try {
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return false;
-    ctx.filter = 'blur(2px)';
-    return ctx.filter === 'blur(2px)';
-  } catch {
-    return false;
-  }
-}
-
 function clamp(v: number): number {
   return Math.max(0, Math.min(255, v));
 }
 
 /**
- * Manual pixel-level fallback for browsers without real `ctx.filter`
- * support, approximating the same 7 looks via direct channel math.
+ * Applies one of the 7 looks via direct per-pixel channel math (used for
+ * every photo, in every browser — see compositor.ts's filterCroppedSource).
  * Mutates `imageData` in place.
  */
 export function applyFilterToImageData(imageData: ImageData, filter: FilterId): void {
